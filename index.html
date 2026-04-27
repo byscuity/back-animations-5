@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BACKGROUND ANIMATIONS - Quadrados Giratórios</title>
+    <title>Background Animations | Quadrados Girando</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none; /* evita seleção de texto indesejada */
+            user-select: none; /* Evita seleção de texto indesejada */
         }
 
         body {
             background-color: black;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Arial Black', system-ui, sans-serif;
-            overflow: hidden; /* remove scrollbars laterais causadas por quadrados que saem */
+            overflow: hidden; /* Remove rolagem para manter o efeito puro */
+            font-family: 'Segoe UI', 'Montserrat', 'Poppins', system-ui, -apple-system, 'Inter', sans-serif;
+            font-weight: 600;
             position: relative;
         }
 
-        /* Canvas onde os quadrados serão desenhados, posicionado atrás do conteúdo textual */
+        /* CANVAS: responsável pelos quadrados animados */
         #canvas-bg {
             position: fixed;
             top: 0;
@@ -31,98 +29,88 @@
             width: 100%;
             height: 100%;
             display: block;
-            background-color: black; /* fundo preto sólido */
+            background-color: black;
             z-index: 1;
+            pointer-events: none; /* Permite clicar através do canvas, mantendo texto interativo se necessário */
         }
 
-        /* Container do texto central e linhas */
-        .text-overlay {
-            position: relative;
+        /* Container central do texto e linhas */
+        .center-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 2;
             text-align: center;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             width: 100%;
-            pointer-events: none; /* permite clicar através do texto se necessário */
+            pointer-events: none; /* Deixa passar clique, mas não atrapalha a visão */
         }
 
-        /* Estilo das linhas superior e inferior (cobrem toda a largura da frase) */
-        .line-top, .line-bottom {
+        /* Linha superior (acima do texto) */
+        .line-top {
+            width: 90%;
+            max-width: 850px;
+            height: 3px;
             background-color: white;
-            height: 4px;
-            width: 100%;
-            max-width: 700px; /* largura máxima igual ao texto + um pouco, mas cobre exatamente a frase */
-            margin: 0 auto;
+            margin: 0 auto 1.5rem auto;
             border-radius: 2px;
+            box-shadow: 0 0 4px rgba(255,255,255,0.6);
+            transition: all 0.2s ease;
         }
 
-        /* Ajuste para que as linhas tenham exatamente a largura do conteúdo da frase */
-        .line-wrapper {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-
-        /* frase principal */
+        /* Texto principal */
         .main-title {
             font-size: clamp(1.8rem, 8vw, 4rem);
-            font-weight: 900;
-            letter-spacing: 4px;
-            margin: 20px 0;
-            text-transform: uppercase;
-            background: transparent;
+            letter-spacing: 0.08em;
             color: white;
-            font-family: 'Segoe UI', 'Arial Black', sans-serif;
-            text-shadow: 0 0 5px rgba(255,255,255,0.3);
-            white-space: nowrap; /* garante que fique em uma linha só, se possível */
+            text-transform: uppercase;
+            font-weight: 700;
+            background: transparent;
+            text-shadow: 0 0 6px rgba(255,255,255,0.3);
+            backdrop-filter: blur(0px);
+            margin: 0.25rem 0;
+            word-break: keep-all;
+            white-space: nowrap;
         }
 
-        /* Caso a tela seja muito pequena, quebra a linha para não sair da tela, mas ainda assim o tamanho da linha acompanha */
-        @media (max-width: 650px) {
+        /* Para telas pequenas: quebra o texto em duas linhas mas mantendo a frase inteira */
+        @media (max-width: 680px) {
             .main-title {
                 white-space: normal;
-                word-break: keep-all;
-                font-size: clamp(1.4rem, 7vw, 2.5rem);
-                padding: 0 16px;
+                font-size: clamp(1.4rem, 7vw, 2.6rem);
+                padding: 0 1rem;
+                line-height: 1.3;
             }
             .line-top, .line-bottom {
-                max-width: 90%;
+                width: 75%;
             }
         }
 
-        /* Configuração para que as linhas tenham largura igual ao conteúdo do título */
-        .text-container {
-            display: inline-block;
-            text-align: center;
-        }
-
-        /* Garantir que as linhas tenham a mesma largura que o texto */
-        .line-top, .line-bottom {
-            width: auto;
-            min-width: 100%;
-        }
-
-        /* Versão responsiva mais elegante: as linhas acompanham o tamanho do título */
-        .title-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .line-unit {
+        /* Linha inferior (abaixo do texto) */
+        .line-bottom {
+            width: 90%;
+            max-width: 850px;
+            height: 3px;
             background-color: white;
-            height: 4px;
-            border-radius: 3px;
-            transition: width 0.2s ease;
+            margin: 1.5rem auto 0 auto;
+            border-radius: 2px;
+            box-shadow: 0 0 4px rgba(255,255,255,0.6);
         }
 
-        /* Controle dinâmico via JS opcional, mas o CSS com width:100% já faz bom trabalho */
-        .dynamic-line {
+        /* efeito sutil de pulsação nas linhas opcional (não atrapalha) */
+        @keyframes subtlePulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .line-top, .line-bottom {
+            animation: subtlePulse 2s infinite alternate ease-in-out;
+        }
+        
+        /* garantia que tudo fique legível e sem overflow */
+        html, body {
             width: 100%;
+            height: 100%;
+            background: black;
         }
     </style>
 </head>
@@ -130,301 +118,288 @@
 
     <canvas id="canvas-bg"></canvas>
 
-    <div class="text-overlay">
-        <div class="title-wrapper" id="titleWrapper">
-            <!-- Linha Superior (branca) que cobre toda a largura da frase -->
-            <div class="line-wrapper" id="topLineWrapper">
-                <div class="line-top" id="lineTop"></div>
-            </div>
-            <!-- Frase central: BACKGROUND ANIMATIONS em duas linhas? O enunciado pede: "escrito no centro 'BACKGROUND ANIMATIONS', com 2 linhas, uma em cima e outra em baixo que devem cobrir toda frase" -->
-            <!-- Interpretação: O texto é 'BACKGROUND ANIMATIONS' e há duas linhas (horizontal superior e horizontal inferior) que cobrem toda a extensão da frase -->
-            <!-- Portanto, o texto será exibido em UMA linha (como a frase completa), e as linhas (superior e inferior) cobrem exatamente o comprimento do texto -->
-            <div class="main-title" id="mainTitle">BACKGROUND ANIMATIONS</div>
-            <!-- Linha Inferior (branca) que cobre toda a largura da frase -->
-            <div class="line-wrapper" id="bottomLineWrapper">
-                <div class="line-bottom" id="lineBottom"></div>
-            </div>
-        </div>
+    <div class="center-content">
+        <div class="line-top"></div>
+        <div class="main-title">BACKGROUND ANIMATIONS</div>
+        <div class="line-bottom"></div>
     </div>
 
     <script>
         (function() {
-            // ------------------- CONFIGURAÇÕES DOS QUADRADOS -------------------
+            // --- Configurações principais ---
             const canvas = document.getElementById('canvas-bg');
             const ctx = canvas.getContext('2d');
 
-            // Quadrados: tamanho médio (entre 35px e 65px de lado)
-            const MIN_SIZE = 38;
-            const MAX_SIZE = 62;
-            // Velocidade de subida (lenta) - pixels por segundo (considerando 60fps padrão)
-            const SPEED_BASE = 28; // pixels por segundo
-            // Quantidade máxima de quadrados ativos
-            const MAX_SQUARES = 65;
-            // Intervalo para gerar novos quadrados (milissegundos)
-            const GENERATION_INTERVAL_MS = 320;
+            // Quadrados: tamanho médio (entre 45px e 80px, mas maioria na faixa média)
+            const MIN_SIZE = 42;
+            const MAX_SIZE = 80;
+            // Velocidade de subida rápida (pixels por segundo)
+            const BASE_RISE_SPEED = 180;   // sobe rápido
+            // Velocidade de rotação lenta (radianos por segundo)
+            const ROTATION_SPEED_RAD = 0.9;   // ~50 graus/segundo, suave e lento
             
-            // Quadrados irão girar lentamente (rotação incremental)
-            // Cada quadrado terá um ângulo inicial aleatório e uma velocidade angular pequena
+            // Quantidade máxima de quadrados ativos para boa performance
+            const MAX_SQUARES = 38;
+            // Intervalo de spawn (milissegundos) - gera quadrados continuamente
+            const SPAWN_INTERVAL_MS = 420;
+            
+            // Parâmetros de fade gradativo (transparência aumenta conforme sobe)
+            // O quadrado some completamente ao atingir o topo (y - size/2 <= 0)
             
             let squares = [];
             let animationId = null;
             let lastTimestamp = 0;
-            let canvasWidth, canvasHeight;
+            let lastSpawnTime = 0;
             
-            // Ajuste para performance e resolução
-            function resizeCanvas() {
-                canvasWidth = window.innerWidth;
-                canvasHeight = window.innerHeight;
-                canvas.width = canvasWidth;
-                canvas.height = canvasHeight;
-                // Não é necessário reposicionar quadrados existentes pois eles estão em coordenadas relativas à altura,
-                // mas se redimensionar, os quadrados que estão em tela podem ficar fora da nova área?
-                // Para manter a experiência fluida, não resetamos os quadrados, apenas redesenhamos.
-                // Caso algum quadrado fique fora dos limites ele será removido naturalmente na atualização.
-            }
+            // Dimensões do canvas dinâmicas
+            let canvasWidth = window.innerWidth;
+            let canvasHeight = window.innerHeight;
             
-            // Classe que representa um quadrado giratório subindo
-            class RotatingSquare {
-                constructor(x, y, size, angle, angularSpeed) {
-                    this.x = x;               // pos X (centro do quadrado)
-                    this.y = y;               // pos Y (centro)
-                    this.size = size;         // largura/altura
+            // ---------- Classe Quadrado com rotação lenta e subida rápida ----------
+            class RisingSquare {
+                constructor(x, y, size, angle, rotationSpeed) {
+                    this.x = x;               // centro x
+                    this.y = y;               // centro y (começa na base ou abaixo)
+                    this.size = size;         // largura/altura do quadrado
                     this.angle = angle;       // ângulo atual em radianos
-                    this.angularSpeed = angularSpeed; // radianos por segundo
-                    this.opacity = 1.0;       // opacidade total começa opaco, depois vai sumindo gradualmente no topo
-                    // Velocidade vertical (pixels por segundo)
-                    this.speedY = SPEED_BASE + (Math.random() * 12 - 6); // pequena variação entre 22 e 34 px/s
+                    this.rotationSpeed = rotationSpeed; // rad/s (lento)
+                    this.riseSpeed = BASE_RISE_SPEED;   // pixels/segundo (rápido)
                 }
                 
+                // Atualiza posição e rotação baseado no delta de tempo (segundos)
                 update(deltaSec) {
-                    // Move para cima (diminui Y)
-                    this.y -= this.speedY * deltaSec;
-                    // Atualiza ângulo (rotação lenta)
-                    this.angle += this.angularSpeed * deltaSec;
-                    // Normaliza ângulo para não ficar enorme (opcional)
+                    // SOBE RÁPIDO: diminui Y (para cima)
+                    this.y -= this.riseSpeed * deltaSec;
+                    // ROTAÇÃO LENTA: incrementa ângulo
+                    this.angle += this.rotationSpeed * deltaSec;
+                    // manter ângulo dentro de 0 a 2PI (opcional, apenas para evitar overflow)
                     if (this.angle > Math.PI * 2) this.angle -= Math.PI * 2;
-                    
-                    // Calcular opacidade baseado na posição Y: começa em 1 (quando nasce perto da base)
-                    // e vai gradativamente até 0 ao atingir o topo (y <= 0 + metade do tamanho? vamos sumir quando y + size/2 <= 0)
-                    // Mas queremos que suma gradativamente: quanto mais próximo do topo, mais transparente.
-                    // Opacidade linear: partindo da posição Y inicial (próximo à altura da tela) = 1, até y <= (size/2) opacidade 0
-                    const halfSize = this.size / 2;
-                    // distancia proporcional: começo = canvasHeight - halfSize (quase base), fim = halfSize (topo)
-                    const startY = canvasHeight - halfSize;
-                    const endY = halfSize;
-                    let t = (this.y - endY) / (startY - endY);
-                    t = Math.min(1, Math.max(0, t));
-                    // Opacidade: quando t=1 (base) => opacidade 1; quando t=0 (topo) => opacidade 0
-                    this.opacity = t;
-                    
-                    // Remove se completamente sumiu ou saiu da tela (y + halfSize < 0)
-                    return (this.y + halfSize > 0 && this.opacity > 0.01);
+                    return this; 
                 }
                 
-                draw(ctx) {
-                    ctx.save();
-                    // Configurar transparência baseada na opacidade
-                    ctx.globalAlpha = this.opacity;
-                    ctx.fillStyle = 'white';
-                    ctx.strokeStyle = 'white';
+                // Verifica se o quadrado ainda está visível (não sumiu completamente)
+                // Critério de desaparecimento: quando a parte inferior? Na verdade, queremos que suma gradativamente até o topo.
+                // Mas ao atingir o ponto onde o quadrado inteiro sai da tela (topo: y + size/2 < 0), removemos.
+                // Contudo o efeito pede "somem gradativamente até o superior da tela". Durante o trajeto, aplicamos fade alfa.
+                // Remoção final quando topo do quadrado (y - size/2) > canvasHeight? NÃO, porque sobe.
+                // Remover quando a parte inferior do quadrado passar do topo: y + size/2 <= 0
+                isAlive() {
+                    // se o quadrado ainda não passou completamente do topo (borda inferior do quadrado ainda tem algum pixel na tela)
+                    // mas se já está totalmente acima da tela (y + size/2 <= 0), removemos.
+                    return (this.y + this.size / 2) > 0;
+                }
+                
+                // Retorna o fator de opacidade baseado na posição Y (quanto mais perto do topo, mais transparente)
+                // Começa com opacidade máxima (1) na base e vai até 0 quando atinge o topo (y - size/2 <= 0).
+                // Gradiente suave: Quanto menor Y, mais fade.
+                getAlpha() {
+                    // y vai desde a parte inferior (canvasHeight + alguma margem) até 0 - size/2
+                    // Calculamos o progresso baseado na altura do canvas: 
+                    // Consideramos que o fade começa a intensificar quando o quadrado passa do meio para o topo.
+                    // Mas para efeito "somem gradativamente até o superior", faremos alpha linear entre a posição inicial até o topo.
+                    const topEdge = this.y - this.size / 2;   // coordenada Y do topo do quadrado
+                    const bottomEdge = this.y + this.size / 2;
                     
-                    // Translada para o centro do quadrado e aplica rotação
+                    // O quadrado nasce na base ou um pouco abaixo do canvas (y >= canvasHeight + offset)
+                    // e termina no topo (topEdge <= 0). Mapeamos alpha de 1 (perto da base ou no início da tela) 
+                    // até 0 (quando topEdge <= 0).
+                    // Porém para suavidade e desaparecimento gradual ao longo de toda subida, usamos interpolação baseada em Y.
+                    // Quanto mais próximo do topo, menor o alpha. 
+                    // Usar referência: início de fade quando o centro y está acima de 60% da altura? Não, melhor fazer progresso total:
+                    // O valor máximo de Y inicial é próximo a canvasHeight + size, e mínimo é -size/2.
+                    let t = 1.0;
+                    // A zona de transição total: desde Y_start até Y_end (topo invisível)
+                    const yStartFade = canvasHeight * 0.7;   // a partir dos 70% da tela começa a perder opacidade mais rápido? 
+                    // Queremos que desapareça exatamente antes de sumir, mas com aspecto de esmaecimento.
+                    // Precisão artística: define Alpha = 1 quando y > canvasHeight * 0.4 (parte inferior),
+                    // linear para 0 quando y <= 0.
+                    let alpha = 1;
+                    const maxY = canvasHeight + this.size;   // região original onde spawna
+                    const minY = 0 - this.size/2;             // topo sumido
+                    // mapear confiavelmente: alpha = (y - minY) / (maxY - minY) mas invertido? Queremos alpha 1 na base e 0 no topo.
+                    if (maxY > minY) {
+                        let progress = (this.y - minY) / (maxY - minY);
+                        progress = Math.min(1.0, Math.max(0.0, progress));
+                        // progress = 1 quando está na base (y grande), e 0 quando está no topo
+                        alpha = progress;
+                    }
+                    // Suaviza um pouco, mas mantém fade total quando está saindo.
+                    // Limitar entre 0 e 1
+                    return Math.min(0.98, Math.max(0, alpha));
+                }
+                
+                // Desenha o quadrado com rotação e transparência baseada na altura
+                draw(ctx) {
+                    const alpha = this.getAlpha();
+                    if (alpha <= 0.01) return; // completamente invisível não desenha
+                    
+                    ctx.save();
                     ctx.translate(this.x, this.y);
                     ctx.rotate(this.angle);
-                    // Desenha o quadrado com centro em (0,0)
-                    const half = this.size / 2;
-                    ctx.fillRect(-half, -half, this.size, this.size);
-                    // Pequeno detalhe: borda branca sutil (opcional, mas já que tudo é branco fica ótimo)
-                    // Adiciona um leve brilho? Não necessário, pois é branco sobre preto.
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = 'white';
+                    ctx.shadowBlur = 0; // sem sombra para manter clean e performance, mas pode adicionar leve brilho
+                    ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                    // Adiciona um leve glow ou borda sutil? Não necessário, apenas quadrado branco puro
                     ctx.restore();
                 }
             }
             
-            // Função para gerar um novo quadrado na parte inferior da tela (próximo à base)
-            function generateSquare() {
-                if (squares.length >= MAX_SQUARES) return;
+            // ----- Função para criar um novo quadrado com características aleatórias (tamanho médio) -----
+            function createSquare(currentTimeMs = null) {
+                // Tamanho médio intencional: distribuição entre 48 e 74 píxels (foco em médio)
+                const size = Math.floor(Math.random() * (MAX_SIZE - MIN_SIZE + 1) + MIN_SIZE);
+                // Posição X aleatória dentro das margens (com borda para não cortar abruptamente)
+                const x = Math.random() * (canvasWidth - size) + size/2;
+                // Posição inicial Y: surge por debaixo do inferior da tela (base + um pequeno offset)
+                // Para dar sensação de "vindo de baixo", y começa pelo menos canvasHeight + size/2 até canvasHeight + size + 30px
+                const spawnYBottom = canvasHeight + (size * 0.8) + (Math.random() * 40);
+                const y = spawnYBottom;
                 
-                const size = MIN_SIZE + Math.random() * (MAX_SIZE - MIN_SIZE);
-                // Posição X aleatória, garantindo que o quadrado não ultrapasse as bordas laterais
-                const halfSize = size / 2;
-                const maxX = canvasWidth - halfSize;
-                const minX = halfSize;
-                let x;
-                if (maxX <= minX) {
-                    x = canvasWidth / 2;
-                } else {
-                    x = minX + Math.random() * (maxX - minX);
-                }
-                // Y inicial: base da tela, mas para surgir de baixo suavemente, posiciona na parte inferior com pequeno offset.
-                // Queremos que comece na borda inferior (y = canvasHeight - halfSize), ou um pouco acima? A ideia é subir do inferior.
-                // Mas para não aparecer de repente, já inicia no limite inferior: y = canvasHeight - halfSize
-                const y = canvasHeight - halfSize;
-                
-                // Ângulo inicial aleatório entre 0 e 2PI
+                // Ângulo inicial aleatório (entre 0 e 2PI)
                 const angle = Math.random() * Math.PI * 2;
-                // Velocidade angular lenta: entre 0.4 e 1.8 radianos por segundo (giro suave)
-                const angularSpeed = 0.5 + Math.random() * 1.5;
+                // Velocidade de rotação lenta (entre 0.5 e 1.2 rad/s) mas garantindo lentidão
+                const rotSpeed = 0.6 + Math.random() * 0.7;  // ~0.6 a 1.3 rad/s ~ 34°/s a 74°/s (todos lentos)
+                // Fixamos bem abaixo de valores bruscos
                 
-                const newSquare = new RotatingSquare(x, y, size, angle, angularSpeed);
-                squares.push(newSquare);
+                return new RisingSquare(x, y, size, angle, rotSpeed);
             }
             
-            // Atualiza todos os quadrados (movimento e rotação) baseado no delta time
-            function updateSquares(deltaSec) {
-                // Limitar delta máximo para evitar pulos muito grandes (ex: quando a aba fica inativa)
-                const safeDelta = Math.min(deltaSec, 0.033); // max 33ms
-                for (let i = squares.length-1; i >= 0; i--) {
-                    const sq = squares[i];
-                    const keep = sq.update(safeDelta);
-                    if (!keep) {
-                        squares.splice(i,1);
-                    }
+            // ---- Gerenciar spawn contínuo baseado em intervalo de tempo real ----
+            function trySpawnSquare(nowSeconds) {
+                if (squares.length < MAX_SQUARES) {
+                    const newSquare = createSquare();
+                    squares.push(newSquare);
+                } else {
+                    // se atingiu o máximo, tenta substituir um quadrado antigo ou simplesmente não spawna
+                    // mas para manter fluxo contínuo, podemos remover o mais antigo? não é necessário,
+                    // apenas aguardar a remoção natural; como a subida é rápida, rapidamente libera espaço.
+                    // Entretanto, se por algum motivo permanecer lotado, force remoção de inativos nos updates.
                 }
             }
             
-            // Desenha todos os quadrados no canvas
+            // ---- Atualiza todos os quadrados: movimento e remoção dos que saíram ----
+            function updateSquares(deltaSec) {
+                // Atualizar cada quadrado
+                for (let i = 0; i < squares.length; i++) {
+                    squares[i].update(deltaSec);
+                }
+                // Filtrar os que ainda estão vivos (isAlive com base em saída total do topo)
+                squares = squares.filter(sq => sq.isAlive());
+            }
+            
+            // ----- Desenha todos os quadrados com seus respectivos fades e rotações -----
             function drawSquares() {
-                if (!ctx) return;
-                // Limpa o canvas com fundo preto
-                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-                
-                // Depois desenha cada quadrado com sua rotação e opacidade
                 for (let sq of squares) {
                     sq.draw(ctx);
                 }
             }
             
-            // Loop de animação principal usando requestAnimationFrame
-            let lastFrameTime = null;
+            // ----- Loop principal de animação (requestAnimationFrame) -----
+            let previousTime = null;
             
-            function animationFrame(nowMs) {
-                if (!canvas.isConnected) return;
-                if (!lastFrameTime) {
-                    lastFrameTime = nowMs;
-                    requestAnimationFrame(animationFrame);
+            function animate(currentTimeMs) {
+                if (!canvas || !ctx) return;
+                
+                // Converte para segundos
+                const currentSec = currentTimeMs / 1000;
+                
+                if (previousTime === null) {
+                    previousTime = currentSec;
+                    requestAnimationFrame(animate);
                     return;
                 }
                 
-                // Calcular delta time em segundos
-                let deltaMs = Math.min(100, nowMs - lastFrameTime);
-                let deltaSec = deltaMs / 1000;
-                if (deltaSec > 0.03) deltaSec = 0.03; // segurança
+                let deltaSec = Math.min(0.033, currentSec - previousTime); // limitar delta máximo para evitar saltos grandes
+                if (deltaSec <= 0) {
+                    previousTime = currentSec;
+                    requestAnimationFrame(animate);
+                    return;
+                }
                 
-                // Atualizar quadrados com o delta
+                // --- Spawn baseado em tempo real (cria quadrados a cada intervalo) ---
+                if (lastSpawnTime === 0) lastSpawnTime = currentSec;
+                const timeSinceLastSpawn = currentSec - lastSpawnTime;
+                if (timeSinceLastSpawn >= (SPAWN_INTERVAL_MS / 1000)) {
+                    trySpawnSquare(currentSec);
+                    lastSpawnTime = currentSec;
+                    // pequeno ajuste para múltiplos spawns caso delta grande, mas seguro:
+                    // apenas um spawn por ciclo
+                }
+                
+                // Atualizar posições e rotações dos quadrados
                 updateSquares(deltaSec);
-                // Desenhar todos os elementos
+                
+                // Limpar canvas com fundo preto total
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Desenhar todos os quadrados brancos com rotação e fade gradiente
                 drawSquares();
                 
-                lastFrameTime = nowMs;
-                requestAnimationFrame(animationFrame);
+                previousTime = currentSec;
+                animationId = requestAnimationFrame(animate);
             }
             
-            // Função para iniciar geração periódica de novos quadrados
-            let generationInterval = null;
-            
-            function startGenerators() {
-                if (generationInterval) clearInterval(generationInterval);
-                generationInterval = setInterval(() => {
-                    // Gera entre 1 e 2 quadrados por vez para ter fluxo contínuo, porém dentro do limite máximo
-                    if (squares.length < MAX_SQUARES) {
-                        const count = Math.min(2, MAX_SQUARES - squares.length);
-                        for (let i = 0; i < count; i++) {
-                            generateSquare();
-                        }
-                    } else {
-                        // Se atingiu o máximo, tenta gerar apenas 1 se houver espaço depois
-                        if (squares.length < MAX_SQUARES) generateSquare();
-                    }
-                }, GENERATION_INTERVAL_MS);
-            }
-            
-            // Ajusta largura das linhas superior e inferior para cobrir exatamente a largura do texto 'BACKGROUND ANIMATIONS'
-            function adjustLinesToTextWidth() {
-                const titleElement = document.getElementById('mainTitle');
-                const lineTop = document.getElementById('lineTop');
-                const lineBottom = document.getElementById('lineBottom');
+            // ----- Ajustar tamanho do canvas quando a janela for redimensionada -----
+            function resizeCanvas() {
+                canvasWidth = window.innerWidth;
+                canvasHeight = window.innerHeight;
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
                 
-                if (titleElement && lineTop && lineBottom) {
-                    // Obtém a largura real do elemento de texto (incluindo padding, mas sem margens extras)
-                    const titleWidth = titleElement.offsetWidth;
-                    // Aplica a mesma largura para ambas as linhas
-                    lineTop.style.width = titleWidth + 'px';
-                    lineBottom.style.width = titleWidth + 'px';
-                    // Garante que as linhas fiquem centralizadas no wrapper
-                    lineTop.style.maxWidth = titleWidth + 'px';
-                    lineBottom.style.maxWidth = titleWidth + 'px';
-                    lineTop.style.minWidth = titleWidth + 'px';
-                    lineBottom.style.minWidth = titleWidth + 'px';
-                }
-            }
-            
-            // Observador de redimensionamento para ajustar as linhas e também o canvas
-            let resizeObserverTimeout = null;
-            function handleResize() {
-                resizeCanvas();
-                // Ajustar largura das linhas dinamicamente (cobrir toda a frase)
-                adjustLinesToTextWidth();
-                // Opcional: reposicionar levemente os quadrados? Não necessário, mas se redimensionar drasticamente, alguns ficarão fora?
-                // Para remover quadrados que estão fora dos limites (como x centralizado mas fora da tela), 
-                // podemos filtrar aqueles que estão com X inviável. Mas o update natural cuida da Y, e x fora pode ser ajustado.
-                // Melhor garantir que os quadrados não fiquem fora horizontalmente após redimensionar (caso a largura diminua muito).
-                for (let i = 0; i < squares.length; i++) {
+                // Ao redimensionar, precisamos evitar que os quadrados fiquem fora de contexto
+                // Mas vamos manter os quadrados existentes, apenas garantir que spawn futuro use novas dimensões.
+                // Opcionalmente, poderíamos remover quadrados que ficaram muito deslocados, mas não necessário.
+                // Recomendo apenas reajustar os quadrados que estejam com X muito além? Para ficar orgânico,
+                // se X > nova largura ou X < 0, removemos? não é essencial. Para manter integridade, 
+                // filtramos quadrados com X fora da tela mais tamanho? Mas farei leve ajuste:
+                for (let i=0; i<squares.length; i++) {
                     const sq = squares[i];
-                    const half = sq.size / 2;
-                    // Se o quadrado ultrapassar as novas bordas laterais, reposiciona levemente para dentro?
-                    // Mas para manter a naturalidade, apenas se estiver completamente fora da tela horizontalmente nós removemos.
-                    if (sq.x + half < 0 || sq.x - half > canvasWidth) {
+                    // Se após redimensionamento o quadrado estiver extremamente fora do eixo X, removemos (opcional)
+                    if (sq.x + sq.size/2 < 0 || sq.x - sq.size/2 > canvasWidth) {
                         squares.splice(i,1);
                         i--;
                     }
                 }
+                // Redesenho imediato opcional (o próximo frame ajusta)
             }
             
-            // também observar mudanças de tamanho da fonte ou layout (ex: zoom)
+            // Inicializar alguns quadrados para não começar vazio
+            function populateInitialSquares(count = 12) {
+                for (let i = 0; i < count; i++) {
+                    const size = Math.floor(Math.random() * (MAX_SIZE - MIN_SIZE + 1) + MIN_SIZE);
+                    const x = Math.random() * canvasWidth;
+                    // spawna em diferentes alturas já dentro da tela (mas queremos efeito contínuo) 
+                    // Para não poluir, apenas fará alguns partindo do meio pra baixo também
+                    const y = canvasHeight - size/2 - Math.random() * (canvasHeight * 0.3);
+                    const angle = Math.random() * Math.PI * 2;
+                    const rotSpeed = 0.6 + Math.random() * 0.8;
+                    const sq = new RisingSquare(x, y, size, angle, rotSpeed);
+                    squares.push(sq);
+                }
+            }
+            
+            // ---- eventos ----
             window.addEventListener('resize', () => {
-                if (resizeObserverTimeout) clearTimeout(resizeObserverTimeout);
-                resizeObserverTimeout = setTimeout(() => {
-                    handleResize();
-                }, 60);
+                resizeCanvas();
             });
             
-            // Inicializa e também observa possíveis mudanças no título (carregamento de fontes)
+            // função de inicialização completa
             function init() {
                 resizeCanvas();
-                // Garantir que a primeira geração tenha alguns quadrados iniciais para não ficar vazio
-                for(let i = 0; i < 12; i++) {
-                    generateSquare();
-                }
-                startGenerators();
-                // Ajusta linha ao carregar e depois com um pequeno delay para capturar renderização de fonte
-                adjustLinesToTextWidth();
-                // Atualiza linhas depois que a fonte carregar completamente (e após pequeno delay)
-                setTimeout(() => {
-                    adjustLinesToTextWidth();
-                }, 100);
-                // Também usar um MutationObserver para caso o texto mude (não deve mudar, mas por segurança)
-                const titleElement = document.getElementById('mainTitle');
-                if (titleElement) {
-                    const observer = new ResizeObserver(() => adjustLinesToTextWidth());
-                    observer.observe(titleElement);
-                }
-                // Inicia animação
-                lastFrameTime = null;
-                animationFrame(performance.now());
+                // popula alguns quadrados para animação já iniciar com movimento
+                populateInitialSquares(10);
+                // começamos o loop
+                previousTime = null;
+                lastSpawnTime = 0;
+                animationId = requestAnimationFrame(animate);
             }
             
-            // Quando a página estiver totalmente carregada, inicia
-            window.addEventListener('load', () => {
-                init();
-            });
+            init();
             
-            // Limpeza geral (opcional, mas boa prática)
-            window.addEventListener('beforeunload', () => {
-                if (generationInterval) clearInterval(generationInterval);
-                if (animationId) cancelAnimationFrame(animationId);
-            });
+            // fallback: garantir que o canvas fique sempre sobre fundo preto e sem interrupção
         })();
     </script>
 </body>
